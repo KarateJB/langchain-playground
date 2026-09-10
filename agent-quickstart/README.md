@@ -19,7 +19,8 @@ This project demonstrates how LangChain agents work by creating an interactive a
 
 ```bash
 # 1: Install new packages if not already added
-uv add langchain langchain-google-genai
+uv add langchain deepagents langchain-google-genai
+uv add deepagents
 
 # 2: If already in pyproject.toml, just sync
 uv sync

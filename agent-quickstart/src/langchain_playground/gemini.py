@@ -1,4 +1,5 @@
 from langchain.agents import create_agent
+from deepagents import create_deep_agent
 import sys
 import json
 
@@ -33,7 +34,12 @@ Available Tools:
 
 def ask_agent(question: str):
     """Ask the agent a question and print the response."""
-    agent = create_agent(
+    # agent = create_agent(
+    #     model="google_genai:gemini-3.5-flash-lite",
+    #     tools=[get_weather, translate_to_traditional_chinese, list_tools],
+    #     system_prompt="You are a helpful assistant",
+    # )
+    agent = create_deep_agent(
         model="google_genai:gemini-3.5-flash-lite",
         tools=[get_weather, translate_to_traditional_chinese, list_tools],
         system_prompt="You are a helpful assistant",
