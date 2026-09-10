@@ -1,0 +1,1 @@
+alias agent-quickstart='_f(){ uv run python -m langchain_playground.gemini "$1"; };_f'

@@ -47,7 +47,7 @@ def ask_agent(question: str):
 
 if __name__ == "__main__":
     # Get question from command line or use default
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 1 and " ".join(sys.argv[1:]).strip():
         question = " ".join(sys.argv[1:])
     else:
         question = "Please greet me and tell me what tools are available. Use the list_tools function to show what I can do."
