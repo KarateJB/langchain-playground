@@ -1,5 +1,5 @@
 
-# LangChain Gemini Playground
+# LangChain Agents
 
 A LangChain-based agent that uses Google's Gemini model to understand user questions and intelligently use available tools to provide answers.
 
