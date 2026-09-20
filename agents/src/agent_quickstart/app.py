@@ -50,8 +50,7 @@ def ask_agent(question: str):
     # Format output as proper JSON with double quotes
     print(json.dumps(result["messages"][-1].content_blocks, indent=2, ensure_ascii=False))
 
-
-if __name__ == "__main__":
+def main():
     # Get question from command line or use default
     if len(sys.argv) > 1 and " ".join(sys.argv[1:]).strip():
         question = " ".join(sys.argv[1:])
@@ -59,3 +58,6 @@ if __name__ == "__main__":
         question = "Please greet me and tell me what tools are available. Use the list_tools function to show what I can do."
 
     ask_agent(question)
+
+if __name__ == "__main__":
+    main()

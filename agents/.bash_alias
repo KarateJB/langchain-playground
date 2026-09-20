@@ -1,1 +1,1 @@
-alias agent-quickstart='_f(){ uv run python -m agent_quickstart.main "$1"; };_f'
+alias agent-quickstart='_f(){ uv run python -m agent_quickstart.app "$1"; };_f'
