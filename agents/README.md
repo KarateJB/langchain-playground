@@ -61,20 +61,22 @@ This triggers the agent to greet you and show all available tools.
 
 ### Ask a custom question:
 
+Use `uv run python -m agent_quickstart.app` or `uv run agent-quickstart` followed by your question to interact with the agent.  
+
+Example:
 ```bash
+# Ask about weather
 uv run python -m agent_quickstart.main "What's the weather in San Francisco?"
-```
-
-### Get translations:
-
-```bash
+# Translation
 uv run python -m agent_quickstart.main "Translate 'thank you' to Traditional Chinese"
+# Fetch text from URL
+uv run agent-quickstart "Please read 'https://www.theprp.com/2026/09/19/news/marc-hudson-steps-back-from-dragonforce-am
+id-tinnitus-issues-replacement-announced/' and give me a summary in Traditional Chinese"
 ```
 
-### View available tools:
-
+Or view available tools without asking a specific question:
 ```bash
-uv run python -m agent_quickstart.main "What tools do I have access to?"
+uv run agent-quickstart
 ```
 
 ## Output Format
