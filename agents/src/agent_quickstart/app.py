@@ -4,11 +4,16 @@ import urllib.error
 import urllib.request
 
 from deepagents import create_deep_agent
+from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.tools import tool
+
 # from langgraph.checkpoint.memory import InMemorySaver
 
 # checkpointer = InMemorySaver()
+
+# Load environment variables from .env file
+load_dotenv()
 
 @tool
 def get_weather(city: str) -> str:

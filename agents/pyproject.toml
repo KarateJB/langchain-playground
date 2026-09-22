@@ -11,6 +11,7 @@ dependencies = [
     "deepagents>=0.7.13",
     "langchain>=1.4.0",
     "langchain-google-genai>=4.4.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.scripts]
