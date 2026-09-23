@@ -28,10 +28,9 @@ Do not guess line counts or positions—ground them in tool results from the sav
 MODEL_CONFIG = {
     "model": "gemini-3.5-flash-lite",
     "model_provider": "google-genai",
-    "temperature": 0.5,
+    # "temperature": 0.5, # Set temperature only if the model supports it
     "timeout": 600,
     "max_tokens": 25000,
-    "streaming": True,
 }
 
 
