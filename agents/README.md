@@ -19,15 +19,16 @@ This project demonstrates how LangChain agents work by creating an interactive a
 
 ```bash
 # 1: Install new packages if not already added
-uv add langchain deepagents langchain-google-genai
-uv add deepagents
+uv add langchain deepagents langchain-google-genai python-dotenv
 
 # 2: If already in pyproject.toml, just sync
 uv sync
 ```
 
-2. Set your Google API key:
+2. Set your Google API key and LangSmith(optional):
 
+See "agents/.env.sample" and create "agents/.env" file with the same environment variables. 
+Or you can set them in your command line, e.g., to set the `GOOGLE_API_KEY`:
 ```bash
 export GOOGLE_API_KEY="your-api-key-here"  # On Linux/Mac or Bash
 set GOOGLE_API_KEY=your-api-key-here  # On Windows CMD
