@@ -1,1 +1,3 @@
 alias agent-quickstart='_f(){ uv run python -m agent_quickstart.app "$1"; };_f'
+alias agent-langgraph='_f(){ uv run agent-langgraph "$1"; };_f'
+alias agent-langgraph-gatsby='_f(){ uv run agent-langgraph "gatsby"; };_f'

@@ -2,6 +2,7 @@ import json
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 from deepagents import create_deep_agent
 from dotenv import load_dotenv
@@ -16,14 +17,14 @@ checkpointer = InMemorySaver()
 # Load environment variables from .env file
 load_dotenv()
 
-SYSTEM_PROMPT = """
-You are a literary data assistant.
 
-## Capabilities
+def load_system_prompt() -> str:
+    """Load system prompt from markdown file."""
+    prompt_file = Path(__file__).parent / "prompt.md"
+    return prompt_file.read_text(encoding="utf-8").strip()
 
-- `fetch_text_from_url`: loads document text from a URL into the conversation.
-Do not guess line counts or positions—ground them in tool results from the saved file.
-"""
+
+SYSTEM_PROMPT = load_system_prompt()
 
 MODEL_CONFIG = {
     "model": "gemini-3.5-flash-lite",
