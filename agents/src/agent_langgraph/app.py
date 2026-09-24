@@ -11,6 +11,7 @@ from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 
 from langgraph.checkpoint.memory import InMemorySaver
+from .output_utils import content_blocks_to_markdown, save_to_markdown_file
 
 checkpointer = InMemorySaver()
 
@@ -116,27 +117,23 @@ your available tools and reasoning, do not fabricate numbers: use `null` for tha
 the limitation in `how_you_computed_counts`. If you encounter any errors please report what the error was and what the error message was."""
 
     manager = AgentManager(use_checkpointer=True)
-
-    # You can choose LangChain agent or Deep agent
-
-    # agent = manager.create_agent()
-    # print("Running create_agent...", flush=True)
-    # agent_result = agent.invoke(
-    #     {"messages": [{"role": "user", "content": content}]},
-    #     config={"configurable": {"thread_id": "great-gatsby-lc"}},
-    # )
-
     deep_agent = manager.create_deep_agent()
+    
     print("Running create_deep_agent...", flush=True)
     deep_agent_result = deep_agent.invoke(
         {"messages": [{"role": "user", "content": content}]},
         config={"configurable": {"thread_id": "great-gatsby-da"}},
     )
 
-    # result = agent_result["messages"][-1].content_blocks
     result = deep_agent_result["messages"][-1].content_blocks
-
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+    
+    # Convert to markdown format
+    markdown_content = content_blocks_to_markdown(result)
+    
+    # Save to file with today's date
+    filepath = save_to_markdown_file(markdown_content)
+    
+    print(f"Output saved to: {filepath}")
 
 
 def ask_agent(question: str):
