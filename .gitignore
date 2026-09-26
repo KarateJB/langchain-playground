@@ -171,6 +171,7 @@ poetry.toml
 pyrightconfig.json
 
 # Outputs
-outputs/*
+# agents/src/agent_langgraph/outputs/*.md
+**/outputs/*.md
 
 # End of https://www.toptal.com/developers/gitignore/api/python
