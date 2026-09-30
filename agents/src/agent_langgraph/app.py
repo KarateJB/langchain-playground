@@ -25,6 +25,33 @@ def load_system_prompt() -> str:
     return prompt_file.read_text(encoding="utf-8").strip()
 
 
+def load_content(filename: str) -> str:
+    """Load content from a text file in the contents folder.
+    
+    Args:
+        filename: Name of the file to load (e.g., "analyze_great_gatsby.txt")
+        
+    Returns:
+        Content as string
+        
+    Raises:
+        FileNotFoundError: If the file doesn't exist
+    """
+    content_file = Path(__file__).parent / "contents" / filename
+    
+    if not content_file.exists():
+        error_msg = f"Error: Content file not found: {content_file}"
+        print(error_msg, file=sys.stderr)
+        raise FileNotFoundError(error_msg)
+    
+    try:
+        return content_file.read_text(encoding="utf-8").strip()
+    except Exception as e:
+        error_msg = f"Error reading content file {filename}: {e}"
+        print(error_msg, file=sys.stderr)
+        raise
+
+
 SYSTEM_PROMPT = load_system_prompt()
 
 MODEL_CONFIG = {
@@ -100,22 +127,39 @@ class AgentManager:
             kwargs["checkpointer"] = checkpointer
         return create_deep_agent(**kwargs)
 
+def collect_ai_news():
+    """Analyze the latest AI news with memory persistence."""
+    try:
+        content = load_content("collect-ai-news.txt")
+    except FileNotFoundError:
+        return
+    
+    manager = AgentManager(use_checkpointer=True)
+    deep_agent = manager.create_deep_agent()
+    
+    print("Running collect_ai_news...", flush=True)
+    deep_agent_result = deep_agent.invoke(
+        {"messages": [{"role": "user", "content": content}]},
+        config={"configurable": {"thread_id": "ai-news"}},
+    )
+
+    result = deep_agent_result["messages"][-1].content_blocks
+    
+    # Convert to markdown format
+    markdown_content = content_blocks_to_markdown(result)
+    
+    # Save to file with today's date
+    filepath = save_to_markdown_file(markdown_content)
+    
+    print(f"Output saved to: {filepath}")
 
 def analyze_great_gatsby():
     """Analyze The Great Gatsby from Project Gutenberg with memory persistence."""
-    content = f"""Project Gutenberg hosts a full plain-text copy of F. Scott Fitzgerald's The Great Gatsby.
-URL: https://www.gutenberg.org/files/64317/64317-0.txt
-
-Answer as much as you can:
-
-1) How many lines in the complete Gutenberg file contain the substring `Gatsby` (count lines, not occurrences within a line, each line ends with a line break).
-2) The 1-based line number of the first line in the file that contains `Daisy`.
-3) A two-sentence neutral synopsis.
-
-Do your best on (1) and (2). If at any point you realize you cannot **verify** an exact answer with
-your available tools and reasoning, do not fabricate numbers: use `null` for that field and spell out
-the limitation in `how_you_computed_counts`. If you encounter any errors please report what the error was and what the error message was."""
-
+    try:
+        content = load_content("analyze-great-gatsby.txt")
+    except FileNotFoundError:
+        return
+    
     manager = AgentManager(use_checkpointer=True)
     deep_agent = manager.create_deep_agent()
     
@@ -154,11 +198,16 @@ def main():
     # Get command from command line
     if len(sys.argv) > 1:
         command = sys.argv[1].lower()
-        if command == "gatsby":
-            analyze_great_gatsby()
-            return
-        # Otherwise treat all arguments as a question
-        question = " ".join(sys.argv[1:])
+        match command:
+            case "gatsby":
+                analyze_great_gatsby()
+                return
+            case "ainews":
+                collect_ai_news()
+                return
+            case _:
+                # Otherwise treat all arguments as a question
+                question = " ".join(sys.argv[1:])
     else:
         question = "Please greet me and tell me what tools are available. Use the list_tools function to show what I can do."
 

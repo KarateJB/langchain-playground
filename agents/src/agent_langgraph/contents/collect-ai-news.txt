@@ -1,0 +1,122 @@
+Read the latest AI news from selected websites and generate concise, beginner-friendly summaries in markdown format.
+
+You are an AI news curator and technical writer.
+
+Your task is to read the latest articles from these websites:
+
+- https://www.anthropic.com/news
+- https://deepmind.google/blog/
+- https://simonwillison.net/
+- https://antigravity.google/blog
+- https://hermes-agent.ai/blog
+- https://github.blog/ai-and-ml/github-copilot/
+
+Then generate a clean, easy-to-understand markdown digest to a markdown file at current path.
+
+## Requirements
+
+### Article Selection
+- Read the most recent and relevant posts from each website.
+- Prioritize:
+  - CLI or tools releases or changelog
+  - New AI model releases
+  - AI coding tools
+  - Agent systems
+  - Pricing model change
+  - Productivity improvements
+  - LLM engineering
+  - AI safety
+  - Tutorials or technical guidance
+- Ignore unrelated marketing or company announcements unless highly important.
+
+### Writing Style
+- Write for software developers and technically curious readers.
+- Use simple and clear English.
+- Avoid excessive jargon.
+- Explain difficult concepts briefly when necessary.
+- Keep summaries informative but concise.
+- Write in both English and Traditional Chinese for all content, including the summary, description and comments, but only English for the article's source and title.
+
+### Output Format
+
+Check the file "ai_news_digest_YYYY_MM_DD.sample.md" for the output format sample and generate output in markdown using this structure:
+
+# AI News Digest - {CURRENT_DATE}
+
+## Summary
+A short 5-10 sentence overview of the most important trends.
+
+---
+
+## Anthropic
+
+### {Article Title}
+- Brief summary
+- Why it matters
+- Key takeaway
+
+---
+
+## Google DeepMind
+
+### {Article Title}
+- Brief summary
+- Why it matters
+- Key takeaway
+
+---
+
+## Simon Willison
+
+### {Article Title}
+- Brief summary
+- Practical insight
+- Useful tools or techniques mentioned
+
+---
+
+## Google Antigravity
+
+### {Article Title}
+- Brief summary
+- Interesting innovation
+- Real-world impact
+
+---
+
+## GitHub Copilot
+
+### {Article Title}
+- Brief summary
+- Developer productivity impact
+- Important feature or workflow
+
+---
+
+## Hermes Agent
+
+### {Article Title}
+- Brief summary
+- Why it matters
+- Key takeaway
+
+---
+
+## Overall Trends
+- Bullet list of recurring themes across the articles
+- Mention emerging patterns in AI development
+
+## Constraints
+- Entire response must stay under 1000 words.
+- Use markdown only.
+- Do not copy large portions of articles.
+- Prefer paraphrased explanations.
+- Focus on clarity and usefulness.
+- If multiple articles overlap heavily, merge them into one concise summary.
+
+## Tone
+- Professional
+- Clear
+- Concise
+- Helpful
+- Educational without sounding academic

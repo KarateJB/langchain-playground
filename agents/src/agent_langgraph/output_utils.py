@@ -33,7 +33,7 @@ def content_blocks_to_markdown(content_blocks: list) -> str:
                 text = block.get("text", "")
                 markdown_parts.append(text)
             else:
-                # For other block types, add a header and the content
+                # For other block types, just output the JSON result
                 markdown_parts.append(json.dumps(block, indent=2, ensure_ascii=False))
         else:
             markdown_parts.append(str(block))
