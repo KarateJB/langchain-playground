@@ -153,33 +153,6 @@ def collect_ai_news():
     
     print(f"Output saved to: {filepath}")
 
-def analyze_great_gatsby():
-    """Analyze The Great Gatsby from Project Gutenberg with memory persistence."""
-    try:
-        content = load_content("analyze-great-gatsby.txt")
-    except FileNotFoundError:
-        return
-    
-    manager = AgentManager(use_checkpointer=True)
-    deep_agent = manager.create_deep_agent()
-    
-    print("Running create_deep_agent...", flush=True)
-    deep_agent_result = deep_agent.invoke(
-        {"messages": [{"role": "user", "content": content}]},
-        config={"configurable": {"thread_id": "great-gatsby-da"}},
-    )
-
-    result = deep_agent_result["messages"][-1].content_blocks
-    
-    # Convert to markdown format
-    markdown_content = content_blocks_to_markdown(result)
-    
-    # Save to file with today's date
-    filepath = save_to_markdown_file(markdown_content)
-    
-    print(f"Output saved to: {filepath}")
-
-
 def ask_agent(question: str):
     """Ask the agent a question and print the response."""
     manager = AgentManager(use_checkpointer=False)
@@ -199,12 +172,12 @@ def main():
     if len(sys.argv) > 1:
         command = sys.argv[1].lower()
         match command:
-            case "gatsby":
-                analyze_great_gatsby()
-                return
             case "ainews":
                 collect_ai_news()
                 return
+            # case "example": # Add other command and callback function if needed
+            #     example()
+            #     return
             case _:
                 # Otherwise treat all arguments as a question
                 question = " ".join(sys.argv[1:])
