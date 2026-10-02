@@ -17,7 +17,7 @@ COPY agents/ /app/
 
 # Install Python dependencies using uv
 RUN pip install --no-cache-dir uv && \
-    uv pip install --system --no-cache -r pyproject.toml
+    uv sync --system --no-cache
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1

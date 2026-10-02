@@ -45,6 +45,14 @@ python -m agent_langgraph.app gatsby
 python -m agent_langgraph.app ainews
 ```
 
+You can also enter the container shell directly to interact with the agent:
+```bash
+docker compose run agent-langgraph
+docker exec -it CONTAINER_NAME bash
+
+/app# uv run agent-langgraph "ainews"
+```
+
 ### View logs
 
 ```bash
