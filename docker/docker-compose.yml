@@ -1,10 +1,10 @@
 services:
   postgres:
-    image: todo-postgres:3.0
+    image: agent-postgres:0.0.1
     build:
       context: .
       dockerfile: postgres.dockerfile
-    container_name: todo-postgres
+    container_name: agent-postgres
     networks: 
       - default
     environment:
@@ -17,7 +17,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - todo-postgres:/var/lib/postgresql/data
+      - agent-postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
       interval: 5s
@@ -27,72 +27,14 @@ services:
     # command: 
     #   - sh -c "/usr/local/bin/init.sh"
 
-  gql:
-    image: todo-gql:3.0
-    build:
-      context: ../
-      dockerfile: docker/gql.dockerfile
-      args:
-        env: ${DOCKER_ENV}
-    container_name: todo-gql
-    # environment:
-    networks: 
-      - default
-    # volumes:
-      # - logs:/app/Logs
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  gin:
-    image: todo-gin:3.0
-    build:
-      context: ../
-      dockerfile: docker/gin.dockerfile
-      args:
-        env: ${DOCKER_ENV}
-    container_name: todo-gin
-    environment:
-      GIN_MODE: release
-    networks: 
-      - default
-    # volumes:
-      # - logs:/app/Logs
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  nginx:
-    image: todo-nginx:3.0
-    container_name: todo-nginx
-    build:
-      context: .
-      dockerfile: nginx.dockerfile
-      args:
-        env: ${DOCKER_ENV}
-    networks: 
-      - default
-    ports:
-      - 80:80
-      - ${GQL_PORT}:5001
-      - ${GIN_PORT}:6001
-    secrets:
-      - source: nginx_key
-        target: /etc/docker/certs/docker.key
-      - source: nginx_cert
-        target: /etc/docker/certs/docker.crt
-    depends_on:
-      - gql
-      - gin
-
   agent-langgraph:
-    image: langchain-agent:latest
+    image: agent-langgraph:0.0.1
     build:
       context: ../
       dockerfile: docker/agent.dockerfile
       args:
         env: ${DOCKER_ENV}
-    container_name: langchain-agent
+    container_name: agent-langgraph
     environment:
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       POSTGRES_HOST: postgres
@@ -111,15 +53,9 @@ services:
     # Override default command to keep container running (for interactive use)
     command: tail -f /dev/null
 
-secrets:
-  nginx_key:
-    file: ./certs/docker.key
-  nginx_cert:
-    file: ./certs/docker.crt
-
 networks:
   default:
     driver: bridge
 
 volumes:
-  todo-postgres:
+  agent-postgres:

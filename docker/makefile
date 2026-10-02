@@ -3,8 +3,8 @@
 build:
 				docker compose build --no-cache
 
-run_app:
-				docker compose run --rm agent-langgraph
+run_agent:
+				docker compose run agent-langgraph
 
 run:
 				docker compose up -d

@@ -16,8 +16,9 @@ RUN rm -rf /var/lib/apt/lists/*
 COPY agents/ /app/
 
 # Install Python dependencies using uv
-RUN pip install --no-cache-dir uv && \
-    uv pip install --system --no-cache -r pyproject.toml
+RUN cd /app && \
+    pip install --no-cache-dir uv && \
+    uv sync --no-cache
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
