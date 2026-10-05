@@ -1,4 +1,4 @@
-CREATE DATABASE "demo"
+CREATE DATABASE "agent"
 WITH 
 OWNER = postgres
 ENCODING = 'UTF8'
