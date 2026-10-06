@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import sys
@@ -149,8 +150,9 @@ class AgentManager:
             kwargs["checkpointer"] = self.checkpointer
         return create_deep_agent(**kwargs)
 
-def collect_ai_news():
+def collect_ai_news(thread_id: str | None = None):
     """Analyze the latest AI news with memory persistence."""
+    thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "ai-news")
     try:
         content = load_content("collect-ai-news.txt")
     except FileNotFoundError:
@@ -172,7 +174,7 @@ def collect_ai_news():
         print("Running collect_ai_news...", flush=True)
         deep_agent_result = deep_agent.invoke(
             {"messages": [{"role": "user", "content": content}]},
-            config={"configurable": {"thread_id": "ai-news"}},
+            config={"configurable": {"thread_id": thread_id}},
         )
 
     result = deep_agent_result["messages"][-1].content_blocks
@@ -185,7 +187,7 @@ def collect_ai_news():
     
     print(f"Output saved to: {filepath}")
 
-def ask_agent(question: str, session_id: str | None = None):
+def ask_agent(question: str, thread_id: str | None = None):
     """Ask the agent a question and print the response."""
 
     # Create and invoke agent without checkpointer.
@@ -193,14 +195,14 @@ def ask_agent(question: str, session_id: str | None = None):
     # agent = manager.create_deep_agent()
     # agent_result = agent.invoke({"messages": [{"role": "user", "content": question}]})
 
-    session_id = session_id or os.getenv("AGENT_SESSION_ID", "default")
+    thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "default")
     with postgres_checkpointer() as checkpointer:
         manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
         agent = manager.create_deep_agent()
 
         agent_result = agent.invoke(
             {"messages": [{"role": "user", "content": question}]},
-            config={"configurable": {"thread_id": session_id}},
+            config={"configurable": {"thread_id": thread_id}},
         )
     result = agent_result["messages"][-1].content_blocks
 
@@ -211,23 +213,28 @@ def ask_agent(question: str, session_id: str | None = None):
 
 
 def main():
-    # Get command from command line
-    if len(sys.argv) > 1:
-        command = sys.argv[1].lower()
-        match command:
-            case "ainews":
-                collect_ai_news()
-                return
-            # case "example": # Add other command and callback function if needed
-            #     example()
-            #     return
-            case _:
-                # Otherwise treat all arguments as a question
-                question = " ".join(sys.argv[1:])
-    else:
+    parser = argparse.ArgumentParser(description="Run the LangGraph agent.")
+    parser.add_argument(
+        "--thread",
+        dest="thread_id",
+        help="Thread ID to use for loading and saving conversation memory.",
+    )
+    parser.add_argument(
+        "question",
+        nargs="*",
+        help="Question to ask, or 'ainews' to collect AI news.",
+    )
+    args = parser.parse_args()
+    question = " ".join(args.question).strip()
+
+    if not question:
         question = "Please greet me and tell me what tools are available. Use the list_tools function to show what I can do."
 
-    ask_agent(question)
+    if question.lower() == "ainews":
+        collect_ai_news(thread_id=args.thread_id)
+        return
+
+    ask_agent(question, thread_id=args.thread_id)
 
 
 if __name__ == "__main__":
