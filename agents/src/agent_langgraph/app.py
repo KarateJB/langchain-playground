@@ -1,22 +1,45 @@
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from pathlib import Path
+from urllib.parse import quote
 
 from deepagents import create_deep_agent
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
+from langgraph.checkpoint.postgres import PostgresSaver
 
-from langgraph.checkpoint.memory import InMemorySaver
+# from langgraph.checkpoint.memory import InMemorySaver
 from .output_utils import content_blocks_to_markdown, save_to_markdown_file
 
-checkpointer = InMemorySaver()
+# Use this for in-memory checkpointing (no persistence across runs)
+# checkpointer = InMemorySaver()
 
 # Load environment variables from .env file
 load_dotenv()
+
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_DB = os.getenv("POSTGRES_DB", "agent")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
+POSTGRES_URI = (
+    f"postgresql://{quote(POSTGRES_USER, safe='')}:{quote(POSTGRES_PASSWORD, safe='')}"
+    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+)
+
+
+@contextmanager
+def postgres_checkpointer():
+    """Open the Postgres saver and ensure its checkpoint tables exist."""
+    with PostgresSaver.from_conn_string(POSTGRES_URI) as checkpointer:
+        checkpointer.setup()
+        yield checkpointer
 
 
 def load_system_prompt() -> str:
@@ -96,14 +119,13 @@ TOOLS = [fetch_text_from_url, list_tools]
 class AgentManager:
     """Manages agent and model initialization."""
 
-    def __init__(self, use_checkpointer: bool = False):
-        """Initialize AgentManager.
-        
-        Args:
-            use_checkpointer: Whether to use memory checkpointer for agent.
-        """
+    def __init__(self, use_checkpointer: bool = False, checkpointer=None):
+        """Initialize AgentManager, optionally using a LangGraph checkpointer."""
         self.model = init_chat_model(**MODEL_CONFIG)
+        if use_checkpointer and checkpointer is None:
+            raise ValueError("A checkpointer is required when use_checkpointer is True.")
         self.use_checkpointer = use_checkpointer
+        self.checkpointer = checkpointer
 
     def create_agent(self):
         """Create a standard LangChain agent."""
@@ -113,7 +135,7 @@ class AgentManager:
             "system_prompt": SYSTEM_PROMPT,
         }
         if self.use_checkpointer:
-            kwargs["checkpointer"] = checkpointer
+            kwargs["checkpointer"] = self.checkpointer
         return create_agent(**kwargs)
 
     def create_deep_agent(self):
@@ -124,7 +146,7 @@ class AgentManager:
             "system_prompt": SYSTEM_PROMPT,
         }
         if self.use_checkpointer:
-            kwargs["checkpointer"] = checkpointer
+            kwargs["checkpointer"] = self.checkpointer
         return create_deep_agent(**kwargs)
 
 def collect_ai_news():
@@ -133,15 +155,25 @@ def collect_ai_news():
         content = load_content("collect-ai-news.txt")
     except FileNotFoundError:
         return
+
+    # Create and invoke agent by using in-memory checkpointer.
+    # manager = AgentManager(use_checkpointer=True)
+    # deep_agent = manager.create_deep_agent()
+    # print("Running collect_ai_news...", flush=True)
+    # deep_agent_result = deep_agent.invoke(
+    #     {"messages": [{"role": "user", "content": content}]},
+    #     config={"configurable": {"thread_id": "ai-news"}},
+    # )
     
-    manager = AgentManager(use_checkpointer=True)
-    deep_agent = manager.create_deep_agent()
-    
-    print("Running collect_ai_news...", flush=True)
-    deep_agent_result = deep_agent.invoke(
-        {"messages": [{"role": "user", "content": content}]},
-        config={"configurable": {"thread_id": "ai-news"}},
-    )
+    with postgres_checkpointer() as checkpointer:
+        manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
+        deep_agent = manager.create_deep_agent()
+
+        print("Running collect_ai_news...", flush=True)
+        deep_agent_result = deep_agent.invoke(
+            {"messages": [{"role": "user", "content": content}]},
+            config={"configurable": {"thread_id": "ai-news"}},
+        )
 
     result = deep_agent_result["messages"][-1].content_blocks
     
@@ -153,12 +185,23 @@ def collect_ai_news():
     
     print(f"Output saved to: {filepath}")
 
-def ask_agent(question: str):
+def ask_agent(question: str, session_id: str | None = None):
     """Ask the agent a question and print the response."""
-    manager = AgentManager(use_checkpointer=False)
-    agent = manager.create_deep_agent()
 
-    agent_result = agent.invoke({"messages": [{"role": "user", "content": question}]})
+    # Create and invoke agent without checkpointer.
+    # manager = AgentManager(use_checkpointer=False)
+    # agent = manager.create_deep_agent()
+    # agent_result = agent.invoke({"messages": [{"role": "user", "content": question}]})
+
+    session_id = session_id or os.getenv("AGENT_SESSION_ID", "default")
+    with postgres_checkpointer() as checkpointer:
+        manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
+        agent = manager.create_deep_agent()
+
+        agent_result = agent.invoke(
+            {"messages": [{"role": "user", "content": question}]},
+            config={"configurable": {"thread_id": session_id}},
+        )
     result = agent_result["messages"][-1].content_blocks
 
     # Format output as proper JSON with double quotes
