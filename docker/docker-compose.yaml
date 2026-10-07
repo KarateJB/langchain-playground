@@ -27,14 +27,14 @@ services:
     # command: 
     #   - sh -c "/usr/local/bin/init.sh"
 
-  agent-langgraph:
-    image: agent-langgraph:0.0.1
+  agent:
+    image: agent:0.0.1
     build:
       context: ../
       dockerfile: docker/agent.dockerfile
       args:
         env: ${DOCKER_ENV}
-    container_name: agent-langgraph
+    container_name: agent
     environment:
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       POSTGRES_HOST: postgres

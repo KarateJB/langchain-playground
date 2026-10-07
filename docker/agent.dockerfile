@@ -24,5 +24,5 @@ RUN cd /app && \
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Default command - collect AI news when container starts
-CMD ["python", "-m", "agent_langgraph.app", "ainews"]
+# Default command
+CMD ["uv", "run", "greeting"]

@@ -37,26 +37,18 @@ docker-compose up -d
 
 ```bash
 # Access the container shell
-docker-compose exec agent-langgraph /bin/bash
+docker compose exec agent bash
+# or
+docker exec -it agent bash
 
-# Run agent commands
-python -m agent_langgraph.app "Your question here"
-python -m agent_langgraph.app gatsby
-python -m agent_langgraph.app ainews
-```
-
-You can also enter the container shell directly to interact with the agent:
-```bash
-docker compose run agent-langgraph
-docker exec -it CONTAINER_NAME bash
-
-/app# uv run agent-langgraph "ainews"
+# Run agent commands (check agents/README.md for more details)
+python -m agent_langgraph.app --thread ai-news ainews
 ```
 
 ### View logs
 
 ```bash
-docker-compose logs -f agent-langgraph
+docker-compose logs -f agent
 docker-compose logs -f postgres
 ```
 
@@ -100,7 +92,7 @@ make push_azurecr
 ├─────────────────────────────────────────┤
 │                                         │
 │  ┌─────────────────────────────────┐   │
-│  │   agent-langgraph Container     │   │
+│  │  agent Container     │   │
 │  │  (Python 3.11 + Dependencies)   │   │
 │  │  - Processes AI queries         │   │
 │  │  - Stores session memory        │   │
@@ -117,14 +109,3 @@ make push_azurecr
 └─────────────────────────────────────────┘
 ```
 
----
-## Next Steps
-
-To enable PostgreSQL integration in the agent:
-1. Update `agent_langgraph/app.py` to use `PostgresSaver` instead of `InMemorySaver`
-2. Connection string will be auto-configured from environment variables:
-   - `POSTGRES_HOST`: postgres
-   - `POSTGRES_PORT`: 5432
-   - `POSTGRES_DB`: postgres
-   - `POSTGRES_USER`: postgres
-   - `POSTGRES_PASSWORD`: from `.env`
