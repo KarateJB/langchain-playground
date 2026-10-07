@@ -1,9 +1,8 @@
-.PHONY: build run down
+.PHONY: build run run_agent down
 
 build:
 				docker compose build --no-cache
 
-# Run agent container only
 run_agent:
 				docker compose run agent
 
