@@ -33,7 +33,7 @@ uv sync
 The environment variables include:
 
 - Google API key
-- PostgreSQL connection string (required for LangGraph)
+- PostgreSQL connection settings (only required when database checkpointing is enabled)
 - LangSmith (optional)
 
 See "agents/.env.sample" and create "agents/.env" file with the same environment variables. 
@@ -68,10 +68,13 @@ The LangGraph agent supports:
 
 1. `fetch_text_from_url(url)` - Fetches the content of a web page and returns the text.
 2. `list_tools()` - Lists the tools available to the agent.
-3. Persistent memory using `langgraph.checkpoint.postgres.PostgresSaver`.
+3. Checkpointing with either an in-memory saver or `langgraph.checkpoint.postgres.PostgresSaver`.
 4. Thread-based conversation continuity keyed by a `thread_id`.
 
-The agent runs with Google Gemini and stores conversation checkpoints in PostgreSQL so the same session can continue across runs.
+The agent runs with Google Gemini.
+Set `SUPPORT_DB_CHECKPOINTER=true` to store checkpoints in PostgreSQL, allowing the same session to continue across runs. 
+By default, checkpoints are kept in memory and are not persisted across program runs.
+PostgreSQL connection settings can be provided with the environment variables.
 
 ---
 ## Usage
@@ -167,14 +170,14 @@ uv run agent-langgraph --thread ai-news ainews
 
 ### LangGraph Agent
 
-1. The app loads environment settings from `.env` and falls back to default PostgreSQL values.
-2. It opens a `PostgresSaver` connection and calls `checkpointer.setup()` so the required checkpoint tables exist.
-3. The `AgentManager` creates a Deep Agent with a `checkpointer` when `use_checkpointer=True`.
+1. The app loads environment settings from `.env`.
+2. When `SUPPORT_DB_CHECKPOINTER=true`, it opens a `PostgresSaver` connection and calls `checkpointer.setup()` so the required checkpoint tables exist. Otherwise, it uses an in-memory checkpointer.
+3. The `AgentManager` creates a Deep Agent with a checkpointer.
 4. Each conversation is associated with a `thread_id`.
-5. When the same `thread_id` is used again, LangGraph loads the previous checkpoint state and the agent can continue the conversation naturally.
+5. When the same `thread_id` is used again, LangGraph loads the previous checkpoint state for the lifetime supported by the selected checkpointer.
 6. The final response is returned as JSON content blocks, which are shown in the terminal.
 
-This makes the agent stateful while keeping the memory in PostgreSQL rather than only in memory.
+This makes the agent stateful; setting `SUPPORT_DB_CHECKPOINTER=true` enables persistence in PostgreSQL across program runs.
 
 ---
 ## Example Conversations
@@ -205,4 +208,3 @@ $ uv run agent-langgraph "What tools are available?"
 # Generate the AI news summary and keep it in the same thread
 $ uv run agent-langgraph --thread ai-news ainews
 ```
-
