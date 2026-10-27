@@ -1,3 +1,4 @@
 # Keep the skills directory in Git while ignoring imported skill contents.
-skills/**
-!skills/.gitkeep
+# skills/**
+skills.sample/**
+!skills.sample/.gitkeep
