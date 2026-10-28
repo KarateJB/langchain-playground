@@ -21,6 +21,7 @@ greeting = "agent_quickstart:main"
 agent-quickstart = "agent_quickstart.app:main"
 agent-langgraph = "agent_langgraph.app:main"
 agent-skills = "agent_skills.app:main"
+agent-cli = "agent_cli.app:main"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]

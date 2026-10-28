@@ -131,6 +131,25 @@ Available Tools:
 TOOLS = [fetch_text_from_url, list_tools]
 
 
+def invoke_agent(agent, question: str, thread_id: str) -> list:
+    """Invoke an agent and turn runtime errors into a text content block."""
+    try:
+        result = agent.invoke(
+            {"messages": [{"role": "user", "content": question}]},
+            config={"configurable": {"thread_id": thread_id}},
+        )
+    except Exception as error:  # noqa: BLE001
+        print(error, flush=True)
+        return [
+            {
+                "type": "text",
+                "text": "The agent cannot respond now. Please try again later.",
+            }
+        ]
+
+    return result["messages"][-1].content_blocks
+
+
 class AgentManager:
     """Manages agent and model initialization."""
 
@@ -177,20 +196,21 @@ def collect_ai_news(thread_id: str | None = None):
         deep_agent = manager.create_deep_agent()
 
         print("Running collect_ai_news...", flush=True)
-        deep_agent_result = deep_agent.invoke(
-            {"messages": [{"role": "user", "content": content}]},
-            config={"configurable": {"thread_id": thread_id}},
-        )
+        result = invoke_agent(deep_agent, content, thread_id)
 
-    result = deep_agent_result["messages"][-1].content_blocks
-    
     # Convert to markdown format
     markdown_content = content_blocks_to_markdown(result)
     
     # Save to file with today's date
     filepath = save_to_markdown_file(markdown_content)
     
-    print(f"Output saved to: {filepath}")
+    print(
+        json.dumps(
+            [{"type": "text", "text": f"AI news output saved to: {filepath}"}],
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 def ask_agent(question: str, thread_id: str | None = None):
     """Ask the agent a question and print the response."""
@@ -200,11 +220,7 @@ def ask_agent(question: str, thread_id: str | None = None):
         manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
         agent = manager.create_deep_agent()
 
-        agent_result = agent.invoke(
-            {"messages": [{"role": "user", "content": question}]},
-            config={"configurable": {"thread_id": thread_id}},
-        )
-    result = agent_result["messages"][-1].content_blocks
+        result = invoke_agent(agent, question, thread_id)
 
     # Format output as proper JSON with double quotes
     print(
