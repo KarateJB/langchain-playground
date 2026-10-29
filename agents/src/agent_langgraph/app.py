@@ -14,7 +14,11 @@ from langchain.tools import tool
 
 from agent_checkpointers import configured_checkpointer
 
-from .output_utils import content_blocks_to_markdown, save_to_markdown_file
+from .output_utils import (
+    content_blocks_to_markdown,
+    configure_utf8_streams,
+    save_to_markdown_file,
+)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -192,6 +196,7 @@ def ask_agent(question: str, thread_id: str | None = None):
 
 
 def main():
+    configure_utf8_streams()
     parser = argparse.ArgumentParser(description="Run the LangGraph agent.")
     parser.add_argument(
         "--thread",

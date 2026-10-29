@@ -6,7 +6,9 @@ import sys
 import uuid
 from pathlib import Path
 
-APP = "agent-langgraph"
+from agent_langgraph.output_utils import configure_utf8_streams
+
+APP = "agent-skills"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -70,7 +72,7 @@ def run_agent(question: str | None, thread_id: str) -> str:
         cwd=PROJECT_ROOT,
         capture_output=True,
         check=False,
-        text=True,
+        encoding="utf-8",
     )
     if completed_process.returncode != 0:
         output = completed_process.stderr.strip() or completed_process.stdout.strip()
@@ -94,6 +96,7 @@ def display_response(question: str | None, thread_id: str) -> bool:
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_utf8_streams()
     parser = argparse.ArgumentParser(
         description="Start an interactive session with the LangGraph agent."
     )
