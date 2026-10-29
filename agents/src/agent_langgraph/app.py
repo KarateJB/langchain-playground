@@ -4,58 +4,20 @@ import os
 import sys
 import urllib.error
 import urllib.request
-from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from urllib.parse import quote
 
 from deepagents import create_deep_agent
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.checkpoint.postgres import PostgresSaver
+
+from agent_checkpointers import configured_checkpointer
 
 from .output_utils import content_blocks_to_markdown, save_to_markdown_file
 
 # Load environment variables from .env file
 load_dotenv()
-
-# Set up the in-memory checkpointer
-IN_MEMORY_CHECKPOINTER = InMemorySaver()
-
-# Or use the Postgres checkpointer if SUPPORT_DB_CHECKPOINTER is on
-SUPPORT_DB_CHECKPOINTER = (
-    os.getenv("SUPPORT_DB_CHECKPOINTER", "false").strip().lower()
-    in {"1", "true", "yes", "on"}
-)
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
-POSTGRES_DB = os.getenv("POSTGRES_DB", "agent")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
-POSTGRES_URI = (
-    f"postgresql://{quote(POSTGRES_USER, safe='')}:{quote(POSTGRES_PASSWORD, safe='')}"
-    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-)
-
-
-@contextmanager
-def postgres_checkpointer():
-    """Open the Postgres saver and ensure its checkpoint tables exist."""
-    with PostgresSaver.from_conn_string(POSTGRES_URI) as checkpointer:
-        checkpointer.setup()
-        yield checkpointer
-
-
-def configured_checkpointer():
-    """Return the configured database or in-memory checkpointer context."""
-    if SUPPORT_DB_CHECKPOINTER:
-        print("Using Postgres checkpointer for memory persistence.")
-        return postgres_checkpointer()
-    else:
-        print("Using in-memory checkpointer for memory persistence.")
-        return nullcontext(IN_MEMORY_CHECKPOINTER)
 
 
 def load_system_prompt() -> str:

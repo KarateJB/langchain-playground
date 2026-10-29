@@ -11,6 +11,7 @@ from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 
+from agent_checkpointers import configured_checkpointer
 from agent_langgraph.output_utils import (
     content_blocks_to_markdown,
     save_to_markdown_file,
@@ -169,26 +170,27 @@ class AgentManager:
 def collect_ai_news(thread_id: str | None = None):
     """Collect and save an AI news digest using the relevant available skill."""
     thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "ai-news")
-    manager = AgentManager()
-    deep_agent = manager.create_deep_agent()
+    with configured_checkpointer() as checkpointer:
+        manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
+        deep_agent = manager.create_deep_agent()
 
-    print("Running collect_ai_news...", flush=True)
-    deep_agent_result = deep_agent.invoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": (
-                        "Collect the latest AI news digest. Find and load the relevant "
-                        "available skill, follow its instructions, and use the provided "
-                        "tools to gather and summarize the source material."
-                    ),
-                }
-            ]
-        },
-        config={"configurable": {"thread_id": thread_id}},
-    )
-    result = deep_agent_result["messages"][-1].content_blocks
+        print("Running collect_ai_news...", flush=True)
+        deep_agent_result = deep_agent.invoke(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": (
+                            "Collect the latest AI news digest. Find and load the relevant "
+                            "available skill, follow its instructions, and use the provided "
+                            "tools to gather and summarize the source material."
+                        ),
+                    }
+                ]
+            },
+            config={"configurable": {"thread_id": thread_id}},
+        )
+        result = deep_agent_result["messages"][-1].content_blocks
     
     # Convert to markdown format
     markdown_content = content_blocks_to_markdown(result)
@@ -203,14 +205,15 @@ def ask_agent(question: str, thread_id: str | None = None):
     """Ask the agent a question and print the response."""
 
     thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "default")
-    manager = AgentManager()
-    agent = manager.create_deep_agent()
+    with configured_checkpointer() as checkpointer:
+        manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
+        agent = manager.create_deep_agent()
 
-    agent_result = agent.invoke(
-        {"messages": [{"role": "user", "content": question}]},
-        config={"configurable": {"thread_id": thread_id}},
-    )
-    result = agent_result["messages"][-1].content_blocks
+        agent_result = agent.invoke(
+            {"messages": [{"role": "user", "content": question}]},
+            config={"configurable": {"thread_id": thread_id}},
+        )
+        result = agent_result["messages"][-1].content_blocks
 
     # Format output as proper JSON with double quotes
     print(

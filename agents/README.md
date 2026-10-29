@@ -51,6 +51,7 @@ $env:GOOGLE_API_KEY="your-api-key-here"  # On Windows PowerShell
 The program provides the following agents:
 - **Agent Quickstart**: A simple agent that can answer questions by LangChain agent or Deep Agent. The source files are located in `agents/agent_quickstart`.
 - **LangGraph Agent**: A more advanced agent that can use LangGraph to store and retrieve information. The source files are located in `agents/agent_langgraph`.
+- **Skills Agent**: An agent that can load skill instructions as needed. The source files are located in `agents/agent_skills`.
 
 ### Agent Quickstart
 
@@ -72,7 +73,7 @@ The LangGraph agent supports:
 4. Thread-based conversation continuity keyed by a `thread_id`.
 
 The agent runs with Google Gemini.
-Set `SUPPORT_DB_CHECKPOINTER=true` to store checkpoints in PostgreSQL, allowing the same session to continue across runs. 
+Set `SUPPORT_DB_CHECKPOINTER=true` to store checkpoints in PostgreSQL, allowing the same session to continue across runs for either agent.
 By default, checkpoints are kept in memory and are not persisted across program runs.
 PostgreSQL connection settings can be provided with the environment variables.
 
@@ -187,8 +188,8 @@ uv run agent-langgraph --thread ai-news ainews
 ### LangGraph Agent
 
 1. The app loads environment settings from `.env`.
-2. When `SUPPORT_DB_CHECKPOINTER=true`, it opens a `PostgresSaver` connection and calls `checkpointer.setup()` so the required checkpoint tables exist. Otherwise, it uses an in-memory checkpointer.
-3. The `AgentManager` creates a Deep Agent with a checkpointer.
+2. The shared `agent_checkpointers` package selects either `PostgresSaver` (when `SUPPORT_DB_CHECKPOINTER=true`) or a shared in-memory saver.
+3. Each app's `AgentManager` creates a Deep Agent with the selected checkpointer.
 4. Each conversation is associated with a `thread_id`.
 5. When the same `thread_id` is used again, LangGraph loads the previous checkpoint state for the lifetime supported by the selected checkpointer.
 6. The final response is returned as JSON content blocks, which are shown in the terminal.
