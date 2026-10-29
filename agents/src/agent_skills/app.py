@@ -10,7 +10,11 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
-from agent_langgraph.output_utils import content_blocks_to_markdown, save_to_markdown_file
+
+from agent_langgraph.output_utils import (
+    content_blocks_to_markdown,
+    save_to_markdown_file,
+)
 
 # Load environment variables from .env file
 load_dotenv()

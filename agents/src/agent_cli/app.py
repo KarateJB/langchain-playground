@@ -1,5 +1,3 @@
-"""Interactive wrapper around the existing LangGraph agent command."""
-
 import argparse
 import json
 import shutil
@@ -8,7 +6,7 @@ import sys
 import uuid
 from pathlib import Path
 
-
+APP = "agent-langgraph"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -23,7 +21,7 @@ def build_agent_command(question: str | None, thread_id: str) -> list[str]:
         "run",
         "--project",
         str(PROJECT_ROOT),
-        "agent-langgraph",
+        APP,
         "--thread",
         thread_id,
     ]
@@ -33,7 +31,7 @@ def build_agent_command(question: str | None, thread_id: str) -> list[str]:
 
 
 def parse_agent_output(output: str) -> str:
-    """Extract and render the JSON content blocks printed by agent-langgraph."""
+    """Extract and render the JSON content blocks printed by the agent."""
     decoder = json.JSONDecoder()
     parsed_candidates: list[tuple[int, list[object]]] = []
 
@@ -67,19 +65,19 @@ def parse_agent_output(output: str) -> str:
 
 def run_agent(question: str | None, thread_id: str) -> str:
     """Run one turn through the existing uv console command."""
-    completed = subprocess.run(
+    completed_process = subprocess.run(
         build_agent_command(question, thread_id),
         cwd=PROJECT_ROOT,
         capture_output=True,
         check=False,
         text=True,
     )
-    if completed.returncode != 0:
-        detail = completed.stderr.strip() or completed.stdout.strip()
-        if not detail:
-            detail = f"agent-langgraph exited with status {completed.returncode}."
-        raise RuntimeError(detail)
-    return parse_agent_output(completed.stdout)
+    if completed_process.returncode != 0:
+        output = completed_process.stderr.strip() or completed_process.stdout.strip()
+        if not output:
+            output = f"The agent exited with status {completed_process.returncode}."
+        raise RuntimeError(output)
+    return parse_agent_output(completed_process.stdout)
 
 
 def display_response(question: str | None, thread_id: str) -> bool:

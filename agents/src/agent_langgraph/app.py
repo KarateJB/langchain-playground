@@ -15,6 +15,7 @@ from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.postgres import PostgresSaver
+
 from .output_utils import content_blocks_to_markdown, save_to_markdown_file
 
 # Load environment variables from .env file
@@ -65,23 +66,23 @@ def load_system_prompt() -> str:
 
 def load_content(filename: str) -> str:
     """Load content from a text file in the contents folder.
-    
+
     Args:
         filename: Name of the file to load (e.g., "analyze_great_gatsby.txt")
-        
+
     Returns:
         Content as string
-        
+
     Raises:
         FileNotFoundError: If the file doesn't exist
     """
     content_file = Path(__file__).parent / "contents" / filename
-    
+
     if not content_file.exists():
         error_msg = f"Error: Content file not found: {content_file}"
         print(error_msg, file=sys.stderr)
         raise FileNotFoundError(error_msg)
-    
+
     try:
         return content_file.read_text(encoding="utf-8").strip()
     except Exception as e:
