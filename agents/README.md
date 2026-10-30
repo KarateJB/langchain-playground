@@ -167,6 +167,13 @@ uv run agent-langgraph --thread ai-news ainews
 
 ### Skills Agent
 
+The Skills Agent can use custom SKILL files to answer the questions.
+It uses progressive disclosure: adds skill names and short descriptions to the system prompt only when needed.
+The returned content becomes a tool result in the conversation.
+See `discover_skills` and `load_skill`, the system-prompt setup, and the prompt’s instruction to load relevant skills.
+
+Put your SKILL files in "src/agent_skills/skills/", check "src/agent_skills/skills.sample/" for a sample SKILL.
+
 Run the Skills Agent directly for a default greeting or a one-shot question:
 
 ```bash
