@@ -1,2 +1,3 @@
+"""LangChain Playground quickstart."""
 def main() -> None:
-    print("Hello from langchain-playground!")
+    print("Hello from agent-quickstart!")

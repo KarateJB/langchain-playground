@@ -33,7 +33,7 @@ uv sync
 The environment variables include:
 
 - Google API key
-- PostgreSQL connection string (required for LangGraph)
+- PostgreSQL connection settings (only required when database checkpointing is enabled)
 - LangSmith (optional)
 
 See "agents/.env.sample" and create "agents/.env" file with the same environment variables. 
@@ -49,8 +49,12 @@ $env:GOOGLE_API_KEY="your-api-key-here"  # On Windows PowerShell
 ## Available Tools
 
 The program provides the following agents:
-- **Agent Quickstart**: A simple agent that can answer questions by LangChain agent or Deep Agent. The source files are located in `agents/agent_quickstart`.
-- **LangGraph Agent**: A more advanced agent that can use LangGraph to store and retrieve information. The source files are located in `agents/agent_langgraph`.
+- **Agent Quickstart**: A simple agent that can answer questions by LangChain agent or Deep Agent. The source files are located in `agents/agent_quickstart/`.
+- **LangGraph Agent**: A more advanced agent that can use LangGraph to store and retrieve information. The source files are located in `agents/agent_langgraph/`.
+- **Skills Agent**: An agent that can load skill instructions as needed. The source files are located in `agents/agent_skills/`.
+
+In additional, the program provides the Agent CLI in `agents/agent_cli/`. It's an interactive wrapper around the Skills Agent.
+
 
 ### Agent Quickstart
 
@@ -68,10 +72,19 @@ The LangGraph agent supports:
 
 1. `fetch_text_from_url(url)` - Fetches the content of a web page and returns the text.
 2. `list_tools()` - Lists the tools available to the agent.
-3. Persistent memory using `langgraph.checkpoint.postgres.PostgresSaver`.
+3. Checkpointing with either an in-memory saver or `langgraph.checkpoint.postgres.PostgresSaver`.
 4. Thread-based conversation continuity keyed by a `thread_id`.
 
-The agent runs with Google Gemini and stores conversation checkpoints in PostgreSQL so the same session can continue across runs.
+The agent runs with Google Gemini.
+Set `SUPPORT_DB_CHECKPOINTER=true` to store checkpoints in PostgreSQL, allowing the same session to continue across runs for either agent.
+By default, checkpoints are kept in memory and are not persisted across program runs.
+PostgreSQL connection settings can be provided with the environment variables.
+
+### Skills Agent
+
+The Skills Agent uses a Deep Agent with the Google Gemini model. It discovers skills under `src/agent_skills/skills/`, adds their names and descriptions to the system prompt, and loads the full instructions for a relevant skill only when needed. Its tools include fetching text from a URL, loading a skill, and listing available tools.
+
+The agent supports thread-based conversation continuity. Set `SUPPORT_DB_CHECKPOINTER=true` to use PostgreSQL checkpoints; otherwise, it uses an in-memory checkpointer that does not persist across separate program runs.
 
 ---
 ## Usage
@@ -152,29 +165,57 @@ uv run agent-langgraph --thread ai-news ainews
 - This loads the AI news content and saves a generated summary to a markdown output file while preserving session state for the same thread.
 - The initial prompt is from "agents/src/agent_langgraph/contents/collect-ai-news.txt"
 
+### Skills Agent
 
----
-## How It Works
+The Skills Agent can use custom SKILL files to answer the questions.
+It uses progressive disclosure: adds skill names and short descriptions to the system prompt only when needed.
+The returned content becomes a tool result in the conversation.
+See `discover_skills` and `load_skill`, the system-prompt setup, and the prompt’s instruction to load relevant skills.
 
-### Agent (Quickstart)
+Put your SKILL files in "src/agent_skills/skills/", check "src/agent_skills/skills.sample/" for a sample SKILL.
 
-1. User provides a question (via command line or default)
-2. LangChain creates an agent with the Gemini 3.5 Flash Lite model
-3. The agent analyzes the question and decides which tools to use
-4. Tools are executed and results are returned to the agent
-5. The agent formats a natural language response
-6. Output is printed as formatted JSON
+Run the Skills Agent directly for a default greeting or a one-shot question:
 
-### LangGraph Agent
+```bash
+uv run agent-skills
+uv run agent-skills "Please show me the tools you support."
+uv run agent-skills --thread research "Summarize this page: https://example.com"
+```
 
-1. The app loads environment settings from `.env` and falls back to default PostgreSQL values.
-2. It opens a `PostgresSaver` connection and calls `checkpointer.setup()` so the required checkpoint tables exist.
-3. The `AgentManager` creates a Deep Agent with a `checkpointer` when `use_checkpointer=True`.
-4. Each conversation is associated with a `thread_id`.
-5. When the same `thread_id` is used again, LangGraph loads the previous checkpoint state and the agent can continue the conversation naturally.
-6. The final response is returned as JSON content blocks, which are shown in the terminal.
+It support the shortcut commands:
+```bash
+# Display all shortcut commands
+uv run agent-skills commands
 
-This makes the agent stateful while keeping the memory in PostgreSQL rather than only in memory.
+# Show author information
+uv run agent-skills author
+
+# Collect AI news
+uv run agent-skills ainews
+```
+
+### Agent CLI
+
+The separate `agent-cli` command starts with the Skills agent's default greeting and then accepts questions until you type `quit`, `exit` or press Ctrl+C:
+
+```bash
+uv run agent-cli
+```
+
+The wrapper invokes the existing `agent-skills` command for each turn and uses one thread ID for the session. A unique thread ID is generated by default; pass `--thread` to choose a specific ID:
+
+```bash
+uv run agent-cli --thread customer-support
+```
+
+Notes:
+- Set `APP` in `src/agent_cli/app.py` to select the agent. The selected agent's command must accept `--thread` and an optional question, and print JSON content blocks to stdout.
+- The CLI captures and parses the agent's stdout, then displays the text from the content blocks. For example:
+
+```json
+[{"type": "text", "text": "The response message for users."}]
+```
+
 
 ---
 ## Example Conversations
@@ -205,4 +246,3 @@ $ uv run agent-langgraph "What tools are available?"
 # Generate the AI news summary and keep it in the same thread
 $ uv run agent-langgraph --thread ai-news ainews
 ```
-
