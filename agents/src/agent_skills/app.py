@@ -167,6 +167,27 @@ class AgentManager:
             kwargs["checkpointer"] = self.checkpointer
         return create_deep_agent(**kwargs)
 
+def show_commands():
+    message = """
+    /author - show the author infomation of langchain-playground.
+    /ainews - collect AI news and save to file.
+    """
+    print(
+        json.dumps(
+            [{"type": "text", "text": message}],
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
+
+def show_author():
+    print(
+        json.dumps(
+            [{"type": "text", "text": "Author: karatejb, GitHub: github.com/karatejb"}],
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 def collect_ai_news(thread_id: str | None = None):
     """Collect and save an AI news digest using the relevant available skill."""
@@ -192,14 +213,21 @@ def collect_ai_news(thread_id: str | None = None):
             config={"configurable": {"thread_id": thread_id}},
         )
         result = deep_agent_result["messages"][-1].content_blocks
-    
+
     # Convert to markdown format
     markdown_content = content_blocks_to_markdown(result)
-    
+
     # Save to file with today's date
     filepath = save_to_markdown_file(markdown_content)
-    
-    print(f"Output saved to: {filepath}")
+
+    print(
+        json.dumps(
+            [{"type": "text", "text": f"AI news output saved to: {filepath}"}],
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
+
 
 
 def ask_agent(question: str, thread_id: str | None = None):
@@ -240,10 +268,18 @@ def main():
 
     if not question:
         question = "Please greet me and tell me what tools are available. Use the list_tools function to show what I can do."
-
-    if question.lower() == "ainews":
-        collect_ai_news(thread_id=args.thread_id)
-        return
+    elif len(question) < 20:
+        command = question.removeprefix("/")
+        match command.lower():
+            case "commands":
+                show_commands()
+                return
+            case "author":
+                show_author()
+                return
+            case "ainews":
+                collect_ai_news(thread_id=args.thread_id)
+                return
 
     ask_agent(question, thread_id=args.thread_id)
 

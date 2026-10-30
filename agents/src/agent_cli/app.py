@@ -84,7 +84,7 @@ def run_agent(question: str | None, thread_id: str) -> str:
 
 def display_response(question: str | None, thread_id: str) -> bool:
     """Run a turn and display its answer, returning whether it succeeded."""
-    print("Please wait...", flush=True)
+    print("Please wait...\n", flush=True)
     try:
         answer = run_agent(question, thread_id)
     except (OSError, RuntimeError, ValueError) as error:

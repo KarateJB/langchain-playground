@@ -167,10 +167,10 @@ def collect_ai_news(thread_id: str | None = None):
 
     # Convert to markdown format
     markdown_content = content_blocks_to_markdown(result)
-    
+
     # Save to file with today's date
     filepath = save_to_markdown_file(markdown_content)
-    
+
     print(
         json.dumps(
             [{"type": "text", "text": f"AI news output saved to: {filepath}"}],
