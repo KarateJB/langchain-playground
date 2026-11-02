@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.tools import tool
 
+from agent_langgraph.output_utils import configure_utf8_streams
+
 # from langgraph.checkpoint.memory import InMemorySaver
 
 # checkpointer = InMemorySaver()
@@ -82,6 +84,7 @@ def ask_agent(question: str):
     print(json.dumps(result["messages"][-1].content_blocks, indent=2, ensure_ascii=False))
 
 def main():
+    configure_utf8_streams()
     # Get question from command line or use default
     if len(sys.argv) > 1 and " ".join(sys.argv[1:]).strip():
         question = " ".join(sys.argv[1:])

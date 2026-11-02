@@ -1,8 +1,17 @@
 """Utilities for output formatting and file handling."""
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
+
+
+def configure_utf8_streams() -> None:
+    """Configure console output to support all Unicode characters."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8")
 
 
 def content_blocks_to_markdown(content_blocks: list) -> str:
