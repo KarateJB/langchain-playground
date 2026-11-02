@@ -169,8 +169,8 @@ class AgentManager:
 
 def show_commands():
     message = """
-    /author - show the author infomation of langchain-playground.
-    /ainews - collect AI news and save to file.
+/author - show the author infomation of langchain-playground.
+/ainews - collect AI news and save to file.
     """
     print(
         json.dumps(

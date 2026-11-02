@@ -53,7 +53,7 @@ The program provides the following agents:
 - **LangGraph Agent**: A more advanced agent that can use LangGraph to store and retrieve information. The source files are located in `agents/agent_langgraph/`.
 - **Skills Agent**: An agent that can load skill instructions as needed. The source files are located in `agents/agent_skills/`.
 
-In additional, the program provides the Agent CLI in `agents/agent_cli/`. It's an interactive wrapper around the Skills Agent.
+In addition, the program provides an Agent CLI in `agents/agent_cli/`, which serves as an interactive wrapper around the Skills Agent.
 
 
 ### Agent Quickstart
@@ -91,6 +91,7 @@ The agent supports thread-based conversation continuity. Set `SUPPORT_DB_CHECKPO
 
 Run the agents from the `agents/` directory.
 
+
 ### Agent Quickstart
 
 #### Default behavior (greeting)
@@ -125,6 +126,21 @@ Or view available tools without asking a specific question:
 ```bash
 uv run agent-quickstart
 ```
+
+#### Example Conversations
+
+```bash
+# Weather query
+$ uv run python -m agent_quickstart.main "What's the weather in Tokyo?"
+
+# Translation
+$ uv run python -m agent_quickstart.main "Say 'good morning' in Traditional Chinese"
+
+# Tool discovery
+$ uv run python -m agent_quickstart.main "List all available tools"
+```
+
+
 
 ### LangGraph Agent
 
@@ -165,6 +181,24 @@ uv run agent-langgraph --thread ai-news ainews
 - This loads the AI news content and saves a generated summary to a markdown output file while preserving session state for the same thread.
 - The initial prompt is from "agents/src/agent_langgraph/contents/collect-ai-news.txt"
 
+#### Example Conversations
+
+```bash
+# Start a new thread and ask a question
+$ uv run agent-langgraph --thread research "Summarize this article: https://example.com"
+
+# Continue the same conversation later
+$ uv run agent-langgraph --thread research "Now turn that summary into bullet points for a presentation."
+
+# Use the default thread
+$ uv run agent-langgraph "What tools are available?"
+
+# Generate the AI news summary and keep it in the same thread
+$ uv run agent-langgraph ainews
+```
+
+
+
 ### Skills Agent
 
 The Skills Agent can use custom SKILL files to answer the questions.
@@ -172,7 +206,7 @@ It uses progressive disclosure: adds skill names and short descriptions to the s
 The returned content becomes a tool result in the conversation.
 See `discover_skills` and `load_skill`, the system-prompt setup, and the prompt’s instruction to load relevant skills.
 
-Put your SKILL files in "src/agent_skills/skills/", check "src/agent_skills/skills.sample/" for a sample SKILL.
+Put your SKILL files in `src/agent_skills/skills/`, check `src/agent_skills/skills.sample/` for a sample SKILL.
 
 Run the Skills Agent directly for a default greeting or a one-shot question:
 
@@ -208,6 +242,9 @@ The wrapper invokes the existing `agent-skills` command for each turn and uses o
 uv run agent-cli --thread customer-support
 ```
 
+The CLI support the shortcut commands from agent-skills, type `/commands` to show the available commands.
+
+
 Notes:
 - Set `APP` in `src/agent_cli/app.py` to select the agent. The selected agent's command must accept `--thread` and an optional question, and print JSON content blocks to stdout.
 - The CLI captures and parses the agent's stdout, then displays the text from the content blocks. For example:
@@ -216,33 +253,3 @@ Notes:
 [{"type": "text", "text": "The response message for users."}]
 ```
 
-
----
-## Example Conversations
-
-Agent quickstart:
-```bash
-# Weather query
-$ uv run python -m agent_quickstart.main "What's the weather in Tokyo?"
-
-# Translation
-$ uv run python -m agent_quickstart.main "Say 'good morning' in Traditional Chinese"
-
-# Tool discovery
-$ uv run python -m agent_quickstart.main "List all available tools"
-```
-
-LangGraph agent:
-```bash
-# Start a new thread and ask a question
-$ uv run agent-langgraph --thread research "Summarize this article: https://example.com"
-
-# Continue the same conversation later
-$ uv run agent-langgraph --thread research "Now turn that summary into bullet points for a presentation."
-
-# Use the default thread
-$ uv run agent-langgraph "What tools are available?"
-
-# Generate the AI news summary and keep it in the same thread
-$ uv run agent-langgraph --thread ai-news ainews
-```
