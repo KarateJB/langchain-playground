@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -13,8 +14,8 @@ from langchain.tools import tool
 
 from agent_checkpointers import configured_checkpointer
 from agent_langgraph.output_utils import (
-    content_blocks_to_markdown,
     configure_utf8_streams,
+    content_blocks_to_markdown,
     save_to_markdown_file,
 )
 
@@ -22,6 +23,24 @@ from agent_langgraph.output_utils import (
 load_dotenv()
 
 SKILLS_DIRECTORY = Path(__file__).parent / "skills"
+
+
+def load_content(filename: str) -> str:
+    """Load content from a text file in this agent's contents folder."""
+    content_file = Path(__file__).parent / "contents" / filename
+
+    if not content_file.exists():
+        error_msg = f"Error: Content file not found: {content_file}"
+        print(error_msg, file=sys.stderr)
+        raise FileNotFoundError(error_msg)
+
+    try:
+        return content_file.read_text(encoding="utf-8").strip()
+    except Exception as e:
+        error_msg = f"Error reading content file {filename}: {e}"
+        print(error_msg, file=sys.stderr)
+        raise
+
 
 MODEL_CONFIG = {
     "model": "gemini-3.5-flash-lite",
@@ -122,6 +141,25 @@ Available Tools:
 TOOLS = [fetch_text_from_url, load_skill, list_tools]
 
 
+def invoke_agent(agent, question: str, thread_id: str) -> list:
+    """Invoke an agent and turn runtime errors into a text content block."""
+    try:
+        result = agent.invoke(
+            {"messages": [{"role": "user", "content": question}]},
+            config={"configurable": {"thread_id": thread_id}},
+        )
+    except Exception as error:  # noqa: BLE001
+        print(error, flush=True)
+        return [
+            {
+                "type": "text",
+                "text": "The agent cannot respond now. Please try again later.",
+            }
+        ]
+
+    return result["messages"][-1].content_blocks
+
+
 class AgentManager:
     """Manages agent and model initialization."""
 
@@ -190,29 +228,19 @@ def show_author():
     )
 
 def collect_ai_news(thread_id: str | None = None):
-    """Collect and save an AI news digest using the relevant available skill."""
+    """Analyze the latest AI news with memory persistence."""
     thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "ai-news")
+    try:
+        content = load_content("collect-ai-news.txt")
+    except FileNotFoundError:
+        return
+
     with configured_checkpointer() as checkpointer:
         manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
         deep_agent = manager.create_deep_agent()
 
         print("Running collect_ai_news...", flush=True)
-        deep_agent_result = deep_agent.invoke(
-            {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": (
-                            "Collect the latest AI news digest. Find and load the relevant "
-                            "available skill, follow its instructions, and use the provided "
-                            "tools to gather and summarize the source material."
-                        ),
-                    }
-                ]
-            },
-            config={"configurable": {"thread_id": thread_id}},
-        )
-        result = deep_agent_result["messages"][-1].content_blocks
+        result = invoke_agent(deep_agent, content, thread_id)
 
     # Convert to markdown format
     markdown_content = content_blocks_to_markdown(result)
@@ -237,12 +265,7 @@ def ask_agent(question: str, thread_id: str | None = None):
     with configured_checkpointer() as checkpointer:
         manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
         agent = manager.create_deep_agent()
-
-        agent_result = agent.invoke(
-            {"messages": [{"role": "user", "content": question}]},
-            config={"configurable": {"thread_id": thread_id}},
-        )
-        result = agent_result["messages"][-1].content_blocks
+        result = invoke_agent(agent, question, thread_id)
 
     # Format output as proper JSON with double quotes
     print(
