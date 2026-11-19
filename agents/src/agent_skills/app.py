@@ -13,7 +13,7 @@ from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 
 from agent_checkpointers import configured_checkpointer
-from agent_langgraph.output_utils import (
+from agent_utils.output_utils import (
     configure_utf8_streams,
     content_blocks_to_markdown,
     save_to_markdown_file,
@@ -246,7 +246,10 @@ def collect_ai_news(thread_id: str | None = None):
     markdown_content = content_blocks_to_markdown(result)
 
     # Save to file with today's date
-    filepath = save_to_markdown_file(markdown_content)
+    filepath = save_to_markdown_file(
+        markdown_content,
+        output_dir=Path(__file__).parent / "outputs",
+    )
 
     print(
         json.dumps(

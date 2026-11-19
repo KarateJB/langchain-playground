@@ -6,7 +6,7 @@ import sys
 import uuid
 from pathlib import Path
 
-from agent_langgraph.output_utils import configure_utf8_streams
+from agent_utils.output_utils import configure_utf8_streams
 
 APP = "agent-skills"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
