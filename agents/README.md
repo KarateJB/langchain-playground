@@ -175,7 +175,7 @@ The default thread ID is "default" if the argument `--thread` is skipped.
 #### Run the built-in AI news workflow
 
 ```bash
-uv run agent-langgraph --thread ai-news ainews
+uv run agent-langgraph --thread ai-news collect-ai-news
 ```
 
 - This loads the AI news content and saves a generated summary to a markdown output file while preserving session state for the same thread.
@@ -194,7 +194,7 @@ $ uv run agent-langgraph --thread research "Now turn that summary into bullet po
 $ uv run agent-langgraph "What tools are available?"
 
 # Generate the AI news summary and keep it in the same thread
-$ uv run agent-langgraph ainews
+$ uv run agent-langgraph collect-ai-news
 ```
 
 
@@ -225,7 +225,7 @@ uv run agent-skills commands
 uv run agent-skills author
 
 # Collect AI news
-uv run agent-skills ainews
+uv run agent-skills collect-ai-news
 ```
 
 ### Agent CLI

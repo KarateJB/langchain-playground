@@ -208,7 +208,7 @@ class AgentManager:
 def show_commands():
     message = """
 /author - show the author infomation of langchain-playground.
-/ainews - collect AI news and save to file.
+/collect-ai-news - collect AI news and save to file.
     """
     print(
         json.dumps(
@@ -259,6 +259,13 @@ def collect_ai_news(thread_id: str | None = None):
         )
     )
 
+def post_ai_news_blog(thread_id: str | None = None):
+    """Analyze the latest AI news with memory persistence."""
+    # TODO: Load custom prompt from contents/post-ai-news-blog.txt and invoke agent
+
+    print(
+        json.dumps(result, indent=2, ensure_ascii=False)
+    )
 
 
 def ask_agent(question: str, thread_id: str | None = None):
@@ -287,7 +294,7 @@ def main():
     parser.add_argument(
         "question",
         nargs="*",
-        help="Question to ask, or 'ainews' to collect AI news.",
+        help="Question to ask, or use pre-defined commands.",
     )
     args = parser.parse_args()
     question = " ".join(args.question).strip()
@@ -303,8 +310,11 @@ def main():
             case "author":
                 show_author()
                 return
-            case "ainews":
+            case "collect-ai-news":
                 collect_ai_news(thread_id=args.thread_id)
+                return
+            case "post-ai-news-blog":
+                post_ai_news_blog(thread_id=args.thread_id)
                 return
 
     ask_agent(question, thread_id=args.thread_id)

@@ -208,7 +208,7 @@ def main():
     parser.add_argument(
         "question",
         nargs="*",
-        help="Question to ask, or 'ainews' to collect AI news.",
+        help="Question to ask, or use pre-defined commands.",
     )
     args = parser.parse_args()
     question = " ".join(args.question).strip()
@@ -216,7 +216,7 @@ def main():
     if not question:
         question = "Please greet me and tell me what tools are available. Use the list_tools function to show what I can do."
 
-    if question.lower() == "ainews":
+    if question.lower() == "collect-ai-news":
         collect_ai_news(thread_id=args.thread_id)
         return
 
