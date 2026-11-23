@@ -226,7 +226,12 @@ uv run agent-skills author
 
 # Collect AI news
 uv run agent-skills collect-ai-news
+
+# Collect AI news, convert it to HTML, and post it to Blogger
+uv run agent-skills post-ai-news-blog
 ```
+
+The Blogger workflow uses `src/agent_skills/contents/post-ai-news-blog.txt` and the `post-to-blogger` skill. It may require Blogger OAuth configuration and an authorization code.
 
 ### Agent CLI
 
@@ -252,4 +257,3 @@ Notes:
 ```json
 [{"type": "text", "text": "The response message for users."}]
 ```
-

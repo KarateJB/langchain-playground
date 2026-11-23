@@ -209,6 +209,7 @@ def show_commands():
     message = """
 /author - show the author infomation of langchain-playground.
 /collect-ai-news - collect AI news and save to file.
+/post-ai-news-blog - collect AI news, convert it to HTML, and post it to Blogger.
     """
     print(
         json.dumps(
@@ -260,12 +261,21 @@ def collect_ai_news(thread_id: str | None = None):
     )
 
 def post_ai_news_blog(thread_id: str | None = None):
-    """Analyze the latest AI news with memory persistence."""
-    # TODO: Load custom prompt from contents/post-ai-news-blog.txt and invoke agent
+    """Collect AI news, convert it to HTML, and post it to Blogger."""
+    thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "post-ai-news-blog")
+    try:
+        content = load_content("post-ai-news-blog.txt")
+    except FileNotFoundError:
+        return
 
-    print(
-        json.dumps(result, indent=2, ensure_ascii=False)
-    )
+    with configured_checkpointer() as checkpointer:
+        manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
+        deep_agent = manager.create_deep_agent()
+
+        print("Running post_ai_news_blog...", flush=True)
+        result = invoke_agent(deep_agent, content, thread_id)
+
+    print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
 def ask_agent(question: str, thread_id: str | None = None):
