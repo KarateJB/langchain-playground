@@ -16,6 +16,7 @@ Then generate a clean, easy-to-understand markdown digest.
 Requirements:
 1. Article Selection
 - Read the most recent and relevant posts from each website.
+- On article-listing pages, open and read the linked article itself when its title is presented as a hyperlink, button, or other clickable text. Do not summarize from the listing page or preview alone.
 - Prioritize:
   - CLI or tools releases or changelog
   - New AI model releases
@@ -33,7 +34,11 @@ Requirements:
 - Avoid excessive jargon.
 - Explain difficult concepts briefly when necessary.
 - Keep summaries informative but concise.
-- Write in both English and Traditional Chinese for all content, including the summary, description and comments, but only English for the article's source and title.
+- The digest is bilingual: write every piece of editorial prose in English AND Traditional Chinese. This is mandatory for the summary, every article detail, and every overall-trend bullet.
+- For each item, write the English first, then its Traditional Chinese equivalent immediately after it. The two versions must communicate the same facts and meaning; do not omit either language, even when the source article is only in English.
+- Use Traditional Chinese characters throughout the Chinese text (繁體中文), not Simplified Chinese.
+- Keep section headings, article titles, and source names in English. Do not translate article titles or URLs.
+- Do not satisfy the bilingual requirement by adding a short Chinese note to an otherwise English-only item. Each English content item must have a complete corresponding Traditional Chinese item.
 
 3. Constraints
 - Entire response must stay under 2000 words.
@@ -52,65 +57,89 @@ Requirements:
 
 5. Output Format
 
-Generate the output in markdown using the following structure:
+Generate the output in markdown using the following structure. Follow the language pairing shown below for every article, regardless of source. Use the same paired format for all source sections:
 
 ```
 # AI News Digest - {CURRENT_DATE}
 
 ## Summary
-A short 5-10 sentence overview of the most important trends.
+A short 5-10 sentence overview in English.
+
+The same overview in Traditional Chinese.
 
 ---
 ## Anthropic
 
-### {Article Title}
-- Brief summary
-- Why it matters
-- Key takeaway
+### [{Article Title}]({URL})
+- Summary: {English summary}
+- 摘要：{Traditional Chinese equivalent}
+- Why it matters: {English explanation}
+- 為什麼重要：{Traditional Chinese equivalent}
+- Key takeaway: {English takeaway}
+- 重點：{Traditional Chinese equivalent}
 
 ---
 ## Google DeepMind
 
-### {Article Title}
-- Brief summary
-- Why it matters
-- Key takeaway
+### [{Article Title}]({URL})
+- Summary: {English summary}
+- 摘要：{Traditional Chinese equivalent}
+- Why it matters: {English explanation}
+- 為什麼重要：{Traditional Chinese equivalent}
+- Key takeaway: {English takeaway}
+- 重點：{Traditional Chinese equivalent}
 
 ---
 ## Simon Willison
 
-### {Article Title}
-- Brief summary
-- Practical insight
-- Useful tools or techniques mentioned
+### [{Article Title}]({URL})
+- Summary: {English summary}
+- 摘要：{Traditional Chinese equivalent}
+- Practical insight: {English insight}
+- 實用見解：{Traditional Chinese equivalent}
+- Useful tools or techniques: {English details}
+- 提及的實用工具或技術：{Traditional Chinese equivalent}
 
 ---
 ## Google Antigravity
 
-### {Article Title}
-- Brief summary
-- Interesting innovation
-- Real-world impact
+### [{Article Title}]({URL})
+- Summary: {English summary}
+- 摘要：{Traditional Chinese equivalent}
+- Interesting innovation: {English explanation}
+- 創新之處：{Traditional Chinese equivalent}
+- Real-world impact: {English impact}
+- 實際影響：{Traditional Chinese equivalent}
 
 ---
 ## GitHub Copilot
 
-### {Article Title}
-- Brief summary
-- Developer productivity impact
-- Important feature or workflow
+### [{Article Title}]({URL})
+- Summary: {English summary}
+- 摘要：{Traditional Chinese equivalent}
+- Developer productivity impact: {English impact}
+- 對開發者生產力的影響：{Traditional Chinese equivalent}
+- Important feature or workflow: {English details}
+- 重要功能或工作流程：{Traditional Chinese equivalent}
 
 ---
 ## Hermes Agent
 
-### {Article Title}
-- Brief summary
-- Why it matters
-- Key takeaway
+### [{Article Title}]({URL})
+- Summary: {English summary}
+- 摘要：{Traditional Chinese equivalent}
+- Why it matters: {English explanation}
+- 為什麼重要：{Traditional Chinese equivalent}
+- Key takeaway: {English takeaway}
+- 重點：{Traditional Chinese equivalent}
 
 ---
 ## Overall Trends
-- Bullet list of recurring themes across the articles
-- Mention emerging patterns in AI development
+- {English trend or emerging pattern}
+- {Traditional Chinese equivalent}
+- {English trend or emerging pattern}
+- {Traditional Chinese equivalent}
 ```
+
+Before returning the digest, check that the Summary has both language versions, every article detail has an immediately following Traditional Chinese equivalent, and every Overall Trends bullet is paired in both languages. Revise any English-only prose. If a section has no relevant articles, say so in both languages.
 
