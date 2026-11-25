@@ -206,6 +206,9 @@ It uses progressive disclosure: adds skill names and short descriptions to the s
 The returned content becomes a tool result in the conversation.
 See `discover_skills` and `load_skill`, the system-prompt setup, and the prompt’s instruction to load relevant skills.
 
+Note that we need to configure appropriate read and write permissions for the Deep Agent to access the SKILL files and related scripts. See [Deep Agents - Permissions](https://docs.langchain.com/oss/python/deepagents/permissions).
+
+
 Put your SKILL files in `src/agent_skills/skills/`, check `src/agent_skills/skills.sample/` for a sample SKILL.
 
 Run the Skills Agent directly for a default greeting or a one-shot question:

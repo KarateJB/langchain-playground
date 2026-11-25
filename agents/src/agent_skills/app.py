@@ -4,9 +4,12 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
+from deepagents.middleware.filesystem import FilesystemPermission
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
@@ -23,6 +26,19 @@ from agent_utils.output_utils import (
 load_dotenv()
 
 SKILLS_DIRECTORY = Path(__file__).parent / "skills"
+AGENT_ROOT_DIRECTORY = Path(__file__).resolve().parent
+FILESYSTEM_PERMISSIONS = [
+    FilesystemPermission(
+        operations=["read", "write"],
+        paths=["/skills/**"],
+        mode="allow",
+    ),
+    FilesystemPermission(
+        operations=["write"],
+        paths=["/outputs/**"],
+        mode="allow",
+    ),
+]
 
 
 def load_content(filename: str) -> str:
@@ -149,6 +165,11 @@ def invoke_agent(agent, question: str, thread_id: str) -> list:
             config={"configurable": {"thread_id": thread_id}},
         )
     except Exception as error:  # noqa: BLE001
+        output_dir = Path(__file__).parent / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        error_file = output_dir / f"error_{timestamp}.txt"
+        error_file.write_text(str(error), encoding="utf-8")
         print(error, flush=True)
         return [
             {
@@ -200,6 +221,13 @@ class AgentManager:
             "model": self.model,
             "tools": TOOLS,
             "system_prompt": self._system_prompt(),
+            # Use a virtual filesystem backend rooted at AGENT_ROOT_DIRECTORY to restrict file access.
+            "backend": FilesystemBackend(
+                root_dir=AGENT_ROOT_DIRECTORY,
+                virtual_mode=True,
+            ),
+            # Restrict the agent's filesystem access to only the specified paths and operations.
+            "permissions": FILESYSTEM_PERMISSIONS,
         }
         if self.use_checkpointer:
             kwargs["checkpointer"] = self.checkpointer
