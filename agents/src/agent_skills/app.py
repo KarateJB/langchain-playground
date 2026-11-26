@@ -16,6 +16,7 @@ from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 
 from agent_checkpointers import configured_checkpointer
+from agent_utils.error_handling import handle_agent_errors
 from agent_utils.output_utils import (
     configure_utf8_streams,
     content_blocks_to_markdown,
@@ -157,29 +158,14 @@ Available Tools:
 TOOLS = [fetch_text_from_url, load_skill, list_tools]
 
 
+@handle_agent_errors(Path(__file__).parent / "outputs")
 def invoke_agent(agent, question: str, thread_id: str) -> list:
     """Invoke an agent and turn runtime errors into a text content block."""
-    now = datetime.now(tz=timezone.utc)
-    cp_timestamp = now.isoformat()
-
-    try:
-        result = agent.invoke(
-            {"messages": [{"role": "user", "content": question}]},
-            config={"configurable": {"thread_id": thread_id, "created_at": cp_timestamp}},
-        )
-    except Exception as error:  # noqa: BLE001
-        output_dir = Path(__file__).parent / "outputs"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        timestamp = now.strftime("%Y%m%d_%H%M%S_%f")
-        error_file = output_dir / f"error_{timestamp}.txt"
-        error_file.write_text(str(error), encoding="utf-8")
-        print(error, flush=True)
-        return [
-            {
-                "type": "text",
-                "text": "The agent cannot respond now. Please try again later.",
-            }
-        ]
+    cp_timestamp = datetime.now(tz=timezone.utc).isoformat()
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": question}]},
+        config={"configurable": {"thread_id": thread_id, "created_at": cp_timestamp}},
+    )
 
     return result["messages"][-1].content_blocks
 
