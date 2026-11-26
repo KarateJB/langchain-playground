@@ -159,15 +159,18 @@ TOOLS = [fetch_text_from_url, load_skill, list_tools]
 
 def invoke_agent(agent, question: str, thread_id: str) -> list:
     """Invoke an agent and turn runtime errors into a text content block."""
+    now = datetime.now(tz=timezone.utc)
+    cp_timestamp = now.isoformat()
+
     try:
         result = agent.invoke(
             {"messages": [{"role": "user", "content": question}]},
-            config={"configurable": {"thread_id": thread_id}},
+            config={"configurable": {"thread_id": thread_id, "created_at": cp_timestamp}},
         )
     except Exception as error:  # noqa: BLE001
         output_dir = Path(__file__).parent / "outputs"
         output_dir.mkdir(parents=True, exist_ok=True)
-        timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        timestamp = now.strftime("%Y%m%d_%H%M%S_%f")
         error_file = output_dir / f"error_{timestamp}.txt"
         error_file.write_text(str(error), encoding="utf-8")
         print(error, flush=True)
