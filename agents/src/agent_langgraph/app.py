@@ -13,10 +13,9 @@ from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 
 from agent_checkpointers import configured_checkpointer
-
-from .output_utils import (
-    content_blocks_to_markdown,
+from agent_utils.output_utils import (
     configure_utf8_streams,
+    content_blocks_to_markdown,
     save_to_markdown_file,
 )
 
@@ -169,7 +168,10 @@ def collect_ai_news(thread_id: str | None = None):
     markdown_content = content_blocks_to_markdown(result)
 
     # Save to file with today's date
-    filepath = save_to_markdown_file(markdown_content)
+    filepath = save_to_markdown_file(
+        markdown_content,
+        output_dir=Path(__file__).parent / "outputs",
+    )
 
     print(
         json.dumps(
@@ -206,7 +208,7 @@ def main():
     parser.add_argument(
         "question",
         nargs="*",
-        help="Question to ask, or 'ainews' to collect AI news.",
+        help="Question to ask, or use pre-defined commands.",
     )
     args = parser.parse_args()
     question = " ".join(args.question).strip()
@@ -214,7 +216,7 @@ def main():
     if not question:
         question = "Please greet me and tell me what tools are available. Use the list_tools function to show what I can do."
 
-    if question.lower() == "ainews":
+    if question.lower() == "collect-ai-news":
         collect_ai_news(thread_id=args.thread_id)
         return
 

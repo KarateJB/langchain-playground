@@ -1,20 +1,24 @@
 import argparse
 import json
 import os
+import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
+from deepagents.middleware.filesystem import FilesystemPermission
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 
 from agent_checkpointers import configured_checkpointer
-from agent_langgraph.output_utils import (
-    content_blocks_to_markdown,
+from agent_utils.output_utils import (
     configure_utf8_streams,
+    content_blocks_to_markdown,
     save_to_markdown_file,
 )
 
@@ -22,6 +26,37 @@ from agent_langgraph.output_utils import (
 load_dotenv()
 
 SKILLS_DIRECTORY = Path(__file__).parent / "skills"
+AGENT_ROOT_DIRECTORY = Path(__file__).resolve().parent
+FILESYSTEM_PERMISSIONS = [
+    FilesystemPermission(
+        operations=["read", "write"],
+        paths=["/skills/**"],
+        mode="allow",
+    ),
+    FilesystemPermission(
+        operations=["write"],
+        paths=["/outputs/**"],
+        mode="allow",
+    ),
+]
+
+
+def load_content(filename: str) -> str:
+    """Load content from a text file in this agent's contents folder."""
+    content_file = Path(__file__).parent / "contents" / filename
+
+    if not content_file.exists():
+        error_msg = f"Error: Content file not found: {content_file}"
+        print(error_msg, file=sys.stderr)
+        raise FileNotFoundError(error_msg)
+
+    try:
+        return content_file.read_text(encoding="utf-8").strip()
+    except Exception as e:
+        error_msg = f"Error reading content file {filename}: {e}"
+        print(error_msg, file=sys.stderr)
+        raise
+
 
 MODEL_CONFIG = {
     "model": "gemini-3.5-flash-lite",
@@ -122,6 +157,30 @@ Available Tools:
 TOOLS = [fetch_text_from_url, load_skill, list_tools]
 
 
+def invoke_agent(agent, question: str, thread_id: str) -> list:
+    """Invoke an agent and turn runtime errors into a text content block."""
+    try:
+        result = agent.invoke(
+            {"messages": [{"role": "user", "content": question}]},
+            config={"configurable": {"thread_id": thread_id}},
+        )
+    except Exception as error:  # noqa: BLE001
+        output_dir = Path(__file__).parent / "outputs"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        error_file = output_dir / f"error_{timestamp}.txt"
+        error_file.write_text(str(error), encoding="utf-8")
+        print(error, flush=True)
+        return [
+            {
+                "type": "text",
+                "text": "The agent cannot respond now. Please try again later.",
+            }
+        ]
+
+    return result["messages"][-1].content_blocks
+
+
 class AgentManager:
     """Manages agent and model initialization."""
 
@@ -162,6 +221,13 @@ class AgentManager:
             "model": self.model,
             "tools": TOOLS,
             "system_prompt": self._system_prompt(),
+            # Use a virtual filesystem backend rooted at AGENT_ROOT_DIRECTORY to restrict file access.
+            "backend": FilesystemBackend(
+                root_dir=AGENT_ROOT_DIRECTORY,
+                virtual_mode=True,
+            ),
+            # Restrict the agent's filesystem access to only the specified paths and operations.
+            "permissions": FILESYSTEM_PERMISSIONS,
         }
         if self.use_checkpointer:
             kwargs["checkpointer"] = self.checkpointer
@@ -170,7 +236,8 @@ class AgentManager:
 def show_commands():
     message = """
 /author - show the author infomation of langchain-playground.
-/ainews - collect AI news and save to file.
+/collect-ai-news - collect AI news and save to file.
+/post-ai-news-blog - collect AI news, convert it to HTML, and post it to Blogger.
     """
     print(
         json.dumps(
@@ -190,35 +257,28 @@ def show_author():
     )
 
 def collect_ai_news(thread_id: str | None = None):
-    """Collect and save an AI news digest using the relevant available skill."""
+    """Analyze the latest AI news with memory persistence."""
     thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "ai-news")
+    try:
+        content = load_content("collect-ai-news.txt")
+    except FileNotFoundError:
+        return
+
     with configured_checkpointer() as checkpointer:
         manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
         deep_agent = manager.create_deep_agent()
 
         print("Running collect_ai_news...", flush=True)
-        deep_agent_result = deep_agent.invoke(
-            {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": (
-                            "Collect the latest AI news digest. Find and load the relevant "
-                            "available skill, follow its instructions, and use the provided "
-                            "tools to gather and summarize the source material."
-                        ),
-                    }
-                ]
-            },
-            config={"configurable": {"thread_id": thread_id}},
-        )
-        result = deep_agent_result["messages"][-1].content_blocks
+        result = invoke_agent(deep_agent, content, thread_id)
 
     # Convert to markdown format
     markdown_content = content_blocks_to_markdown(result)
 
     # Save to file with today's date
-    filepath = save_to_markdown_file(markdown_content)
+    filepath = save_to_markdown_file(
+        markdown_content,
+        output_dir=Path(__file__).parent / "outputs",
+    )
 
     print(
         json.dumps(
@@ -228,6 +288,22 @@ def collect_ai_news(thread_id: str | None = None):
         )
     )
 
+def post_ai_news_blog(thread_id: str | None = None):
+    """Collect AI news, convert it to HTML, and post it to Blogger."""
+    thread_id = thread_id or os.getenv("AGENT_SESSION_ID", "post-ai-news-blog")
+    try:
+        content = load_content("post-ai-news-blog.txt")
+    except FileNotFoundError:
+        return
+
+    with configured_checkpointer() as checkpointer:
+        manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
+        deep_agent = manager.create_deep_agent()
+
+        print("Running post_ai_news_blog...", flush=True)
+        result = invoke_agent(deep_agent, content, thread_id)
+
+    print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
 def ask_agent(question: str, thread_id: str | None = None):
@@ -237,12 +313,7 @@ def ask_agent(question: str, thread_id: str | None = None):
     with configured_checkpointer() as checkpointer:
         manager = AgentManager(use_checkpointer=True, checkpointer=checkpointer)
         agent = manager.create_deep_agent()
-
-        agent_result = agent.invoke(
-            {"messages": [{"role": "user", "content": question}]},
-            config={"configurable": {"thread_id": thread_id}},
-        )
-        result = agent_result["messages"][-1].content_blocks
+        result = invoke_agent(agent, question, thread_id)
 
     # Format output as proper JSON with double quotes
     print(
@@ -261,7 +332,7 @@ def main():
     parser.add_argument(
         "question",
         nargs="*",
-        help="Question to ask, or 'ainews' to collect AI news.",
+        help="Question to ask, or use pre-defined commands.",
     )
     args = parser.parse_args()
     question = " ".join(args.question).strip()
@@ -277,8 +348,11 @@ def main():
             case "author":
                 show_author()
                 return
-            case "ainews":
+            case "collect-ai-news":
                 collect_ai_news(thread_id=args.thread_id)
+                return
+            case "post-ai-news-blog":
+                post_ai_news_blog(thread_id=args.thread_id)
                 return
 
     ask_agent(question, thread_id=args.thread_id)

@@ -175,7 +175,7 @@ The default thread ID is "default" if the argument `--thread` is skipped.
 #### Run the built-in AI news workflow
 
 ```bash
-uv run agent-langgraph --thread ai-news ainews
+uv run agent-langgraph --thread ai-news collect-ai-news
 ```
 
 - This loads the AI news content and saves a generated summary to a markdown output file while preserving session state for the same thread.
@@ -194,7 +194,7 @@ $ uv run agent-langgraph --thread research "Now turn that summary into bullet po
 $ uv run agent-langgraph "What tools are available?"
 
 # Generate the AI news summary and keep it in the same thread
-$ uv run agent-langgraph ainews
+$ uv run agent-langgraph collect-ai-news
 ```
 
 
@@ -205,6 +205,9 @@ The Skills Agent can use custom SKILL files to answer the questions.
 It uses progressive disclosure: adds skill names and short descriptions to the system prompt only when needed.
 The returned content becomes a tool result in the conversation.
 See `discover_skills` and `load_skill`, the system-prompt setup, and the prompt’s instruction to load relevant skills.
+
+Note that we need to configure appropriate read and write permissions for the Deep Agent to access the SKILL files and related scripts. See [Deep Agents - Permissions](https://docs.langchain.com/oss/python/deepagents/permissions).
+
 
 Put your SKILL files in `src/agent_skills/skills/`, check `src/agent_skills/skills.sample/` for a sample SKILL.
 
@@ -225,8 +228,13 @@ uv run agent-skills commands
 uv run agent-skills author
 
 # Collect AI news
-uv run agent-skills ainews
+uv run agent-skills collect-ai-news
+
+# Collect AI news, convert it to HTML, and post it to Blogger
+uv run agent-skills post-ai-news-blog
 ```
+
+The Blogger workflow uses `src/agent_skills/contents/post-ai-news-blog.txt` and the `post-to-blogger` skill. It may require Blogger OAuth configuration and an authorization code.
 
 ### Agent CLI
 
@@ -252,4 +260,3 @@ Notes:
 ```json
 [{"type": "text", "text": "The response message for users."}]
 ```
-

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.tools import tool
 
-from agent_langgraph.output_utils import configure_utf8_streams
+from agent_utils.output_utils import configure_utf8_streams
 
 # from langgraph.checkpoint.memory import InMemorySaver
 

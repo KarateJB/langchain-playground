@@ -1,0 +1,10 @@
+Follow the steps to collect AI news and post to my blogger:
+1. Use "collect-ai-news" SKILL to collect news and write to a markdown file.
+2. Use "convert-markdown-to-html" SKILL to convert the markdown file to a HTML file .
+3. Use "post-to-blogger" SKILL to post the HTML content to my blogger. If the OAuth2 token is expired, prompt me the google OAuth2 grant web page url so that I can get the new authorization code and then provide you the new authorization code to generate the new token.json.
+
+Continue each step without showing me the content you created. 
+After the blog is posted successfully, show me: 
+- The file(markdown and HTML) path, I will remove the files by myself.
+- The new posted blog URL in my blogger site(https://karatejb.blogspot.com)
+
