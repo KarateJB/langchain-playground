@@ -260,3 +260,21 @@ Notes:
 ```json
 [{"type": "text", "text": "The response message for users."}]
 ```
+
+---
+## Manage PostgreSQL Checkpoints
+
+LangGraph's `PostgresSaver` creates the following tables in the `public` schema:
+
+- `checkpoints`: checkpoint snapshots, parent checkpoint IDs, thread IDs, and JSONB metadata.
+- `checkpoint_blobs`: serialized channel values referenced by checkpoints.
+- `checkpoint_writes`: pending task writes associated with checkpoints.
+- `checkpoint_migrations`: schema migration versions applied by `PostgresSaver`.
+
+The SQL file [checkpoint_management.sql](sql/checkpoint_management.sql) lists the tables and provides:
+
+- queries for inspecting each checkpoint table;
+- a transaction that deletes all checkpoint, blob, and pending-write data while preserving migration history;
+- a datetime-range query for checkpoints whose `metadata.created_at` value falls within an interval.
+
+
