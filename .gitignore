@@ -173,5 +173,6 @@ pyrightconfig.json
 # Outputs
 # agents/src/agent_langgraph/outputs/*.md
 **/outputs/*.md
+**/outputs/*.txt
 
 # End of https://www.toptal.com/developers/gitignore/api/python
